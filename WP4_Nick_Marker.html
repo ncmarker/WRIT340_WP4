@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Spin Nick's Wheel</title>
+    push
+    <style type="text/css">
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(to bottom, #ffffff, #9cd1ff);
+        background-size: cover;
+        background-repeat: no-repeat;
+        height: 100vh;
+    }
+
+    #chart {
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        top: 20%;
+        left: 10%;
+    }
+
+    #question {
+        position: absolute;
+        width: 400px;
+        height: 500px;
+        top: 0;
+        left: 520px;
+    }
+
+    #question h1 {
+        font-size: 50px;
+        font-weight: bold;
+        font-family: Arial, sans-serif;
+        position: absolute;
+        padding: 0;
+        margin: 0;
+        text-align: left;
+        top: 84%;
+        left: 60%;
+        transform: translate(-50%, -50%);
+        color: #000;
+    }
+    em {
+        font-size: 12px;
+    }
+
+    #image {
+        width: auto;
+        height: 350px;
+        overflow: auto;
+        position: absolute;
+        top: 50%;
+        left: 74%;
+        transform: translate(-50%, -50%);
+    }
+
+    .headline {
+        margin: 0 auto;
+        font-size: 53px;
+        font-family: Arial, sans-serif;
+        position: absolute;
+        left: 37%;
+        top: 10%;
+    }
+    #caption {
+        position: absolute;
+        top: 75%;
+        left: 65%;
+        width: 280px;
+    }
+
+    </style>
+    
+</head>
+<body>
+    <div class="headline"><strong>Nick's Spinner</strong></div>
+    <p><em>*works best on full screen laptop</em></p>
+    <div id="chart"></div>
+    <div id="question"><h1>Spin Me!</h1></div>
+    <div id="img-cont">
+        <img id="image" src="https://t4.ftcdn.net/jpg/02/99/73/99/360_F_299739951_XCDXaOqWi3sJPIBJvKsVRkUuAGtoZqKw.jpg" alt="spin me">
+        <p id="caption"></p>
+    </div>
+    
+    
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" charset="utf-8">
+        var padding = {top:20, right:40, bottom:0, left:0},
+            w = 500 - padding.left - padding.right,
+            h = 500 - padding.top  - padding.bottom,
+            r = Math.min(w, h)/2,
+            rotation = 0,
+            oldrotation = 0,
+            picked = 100000,
+            oldpick = [],
+            color = d3.scale.category20(); // category20c()
+
+        var data = [
+            {"label":"Family", "value":1, "image":"images/family.jpg", "alt":"Family Image", "caption":"This is my family over winter break while we are ice skating in Philly. This is a tradition we do every winter and something that brings back the fun memories of living at home."},
+            {"label":"Friends", "value":1, "image":"images/friends.jpg", "alt":"Friends Image", "caption": "Here is an image of my friends and boyfriend in NYC traveling over winter break. These are my hometown/childhood freinds who I have known all my life and have shaped who I am today."},
+            {"label":"Travel", "value":1, "image":"images/travel.jpg", "alt":"Travel Image", "caption": "This image was taken on a hike in LA, but represents my love for nature and travel. Coming across the country for school was a big step, but something I always dreamed of doing."},
+            {"label":"Food", "value":1, "image":"images/food.jpg", "alt":"Food Image", "caption": "This is a meal my boyfriend and I shared in venice beach. We love trying new places together and going out to eat is one of my most favorite activities to do."},
+            {"label":"Climbing", "value":1, "image":"images/climbing.jpg", "alt":"Climbing Image", "caption": "I met many new friends this past year and they have introduced me to rock climbing. I had never done anything like this before, but it is a new hobby that I truly enjoy doing with them."},
+            {"label":"Pets", "value":1, "image":"images/pets.jpg", "alt":"Pets Image", "caption": "This is my pet cat that I got a little over a year ago. He travels back and forth to home and school with me (on planes and everything) and he is the coolest cat you will ever meet."},
+            {"label":"Music", "value":1, "image":"images/music.jpg", "alt":"Music Image", "caption": "This image was taken at a Two Friends dj set which I went to with my boyfriend and hometown friend. I love this style of music and their mashups are my favorite."},
+            {"label":"Coding", "value":1, "image":"images/coding.jpg", "alt":"Coding Image", "caption": "This image was taken at the Stanford Treehacks Haackathon where my team won $5k in prizes. This competition highlights my passion for tech and love for working with people on sick projects."}
+        ];
+
+        var svg = d3.select('#chart')
+            .append("svg")
+            .data([data])
+            .attr("width",  w + padding.left + padding.right)
+            .attr("height", h + padding.top + padding.bottom);
+
+        var container = svg.append("g")
+            .attr("class", "chartholder")
+            .attr("transform", "translate(" + (w/2 + padding.left) + "," + (h/2 + padding.top) + ")");
+
+        var vis = container
+            .append("g");
+            
+        var pie = d3.layout.pie().sort(null).value(function(d){return 1;});
+
+        var innerRadius = r - 110; 
+
+        var arc = d3.svg.arc().outerRadius(r).innerRadius(innerRadius);
+
+        var arcs = vis.selectAll("g.slice")
+            .data(pie)
+            .enter()
+            .append("g")
+            .attr("class", "slice");
+            
+        arcs.append("path")
+            .attr("fill", function(d, i){ return color(i); })
+            .attr("d", function (d) { return arc(d); });
+
+        arcs.append("text").attr("transform", function(d){
+                d.innerRadius = 0;
+                d.outerRadius = r;
+                d.angle = (d.startAngle + d.endAngle)/2;
+                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius - 30) +")";
+            })
+            .attr("text-anchor", "end")
+            .text( function(d, i) {
+                return data[i].label;
+            });
+
+        container.on("click", spin);
+
+
+        function spin(d){
+            
+            container.on("click", null);
+
+            if(oldpick.length == data.length){
+                container.on("click", null);
+                return;
+            }
+
+            var  ps       = 360/data.length,
+                 pieslice = Math.round(1440/data.length),
+                 rng      = Math.floor((Math.random() * 1440) + 360);
+                
+            rotation = (Math.round(rng / ps) * ps);
+            
+            picked = Math.round(data.length - (rotation % 360)/ps);
+            picked = picked >= data.length ? (picked % data.length) : picked;
+
+
+            if(oldpick.indexOf(picked) !== -1){
+                d3.select(this).call(spin);
+                return;
+            } else {
+                oldpick.push(picked);
+            }
+
+            rotation += 90 - Math.round(ps/2);
+
+            vis.transition()
+                .duration(3000)
+                .attrTween("transform", rotTween)
+                .each("end", function(){
+
+                    // Mark slice as seen
+                    d3.select(".slice:nth-child(" + (picked + 1) + ") path").attr("fill", "#111");
+
+                    // Update displayed word
+                    d3.select("#question h1").text(data[picked].label);
+                    var image_display = document.getElementById("image");
+                    var image_caption = document.getElementById("caption");
+
+                    image_display.src = data[picked].image;
+                    image_display.alt = data[picked].alt;
+
+                    image_caption.innerHTML = data[picked].caption;
+
+                    oldrotation = rotation;
+                
+                    container.on("click", spin);
+                });
+        }
+
+        // Make arrow
+        svg.append("g")
+            .attr("transform", "translate(" + (w + padding.left + padding.right) + "," + ((h/2)+padding.top) + ")")
+            .append("path")
+            .attr("d", "M-" + (r*.15) + ",0L0," + (r*.05) + "L0,-" + (r*.05) + "Z")
+            .style({"fill":"black"});
+
+        // Draw spin circle
+        container.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 60)
+            .style({"fill":"#fff","cursor":"pointer"});
+
+        // Spin text
+        container.append("text")
+            .attr("x", 0)
+            .attr("y", 15)
+            .attr("text-anchor", "middle")
+            .text("SPIN")
+            .style({"font-weight":"bold", "font-size":"30px"});
+        
+        
+        function rotTween(to) {
+          var i = d3.interpolate(oldrotation % 360, rotation);
+          return function(t) {
+            return "rotate(" + i(t) + ")";
+          };
+        }
+        
+    </script>
+</body>
+</html>
